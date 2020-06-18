@@ -7,6 +7,7 @@
 #include <string>
 #include <stack>
 #include <set>
+#include <algorithm>
 #include "mail.h"
 using namespace std;
 
@@ -107,7 +108,9 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 					stringstream tokenized_line(line);
 					while(getline(tokenized_line, text, SPACE)){
 						if(text == "") continue;
-						mail_ptr -> content[text] = true;
+						string str = text;
+						transform(str.begin(), str.end(),str.begin(), ::toupper);
+						mail_ptr -> content[str] = true;
 						mail_ptr -> length += text.length();
 					}
 				}
@@ -220,7 +223,6 @@ set <int> Database::getAllID(string from, string to, string start_date, string e
 	set <int> candidates;
 	map <int, Mail*>::iterator iter;
 	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
-		bool legal = true;
 		if(from != "" and iter -> second -> from != from) break;
 		else if(to != "" and iter -> second -> to != to) break;
 		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) break;
@@ -238,7 +240,11 @@ bool getElement(stack <bool> S){
 bool Database::calculator(int id, vector <string> postfix){
 	stack <bool> S;
 	for(int i = 0; i < postfix.size(); i++){
-		if(notOperator(postfix[i])) S.push((*info_ptr)[id] -> content[postfix[i]]);
+		if(notOperator(postfix[i])){
+			string str = postfix[i];
+			transform(str.begin(), str.end(),str.begin(), ::toupper);
+			S.push((*info_ptr)[id] -> content[str]);
+		}
 		else{
 			if(postfix[i] == "!") S.push(!getElement(S));
 			else if(postfix[i] == "&") S.push(getElement(S) & getElement(S));
@@ -253,7 +259,7 @@ void Database::query_operation(){
 	getline(cin, line);
 	stringstream tokenized_line(line);
 	getline(tokenized_line, text, SPACE);
-	string from = "", to = "", start_date = "", end_date = "99999999", expression = "";
+	string from = "", to = "", start_date = "", end_date = "999999999999", expression = "";
 	while(getline(tokenized_line, text, SPACE)){
 		if(text[0] == '-'){
 			if(text[1] == 'f') from = text.substr(3, text.length() - 4);
