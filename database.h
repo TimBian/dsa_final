@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <stack>
+#include <set>
 #include "mail.h"
 using namespace std;
 
@@ -14,7 +15,7 @@ using namespace std;
 #define COLON ':'
 #define TILDE '~'
 
-enum LINE {from, date, message_id, subject, to, content};
+enum LINE {FROM, DATE, MESSAGE_ID, SUBJECT, TO, CONTENT};
 
 class Database {
 	private:
@@ -28,6 +29,8 @@ class Database {
 		void remove_operation();
 		void longest_operation();
 		void query_operation();
+		set <int> getAllID(string from, string to, string start_date, string end_date);
+		bool calculator(int id, vector <string> postfix);
 };
 
 Database::Database(){
@@ -51,12 +54,12 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 		stringstream tokenized_line(line);
 		getline(tokenized_line, title, SPACE);
 		switch(line_count){
-			case LINE(from):{
+			case LINE(FROM):{
 				getline(tokenized_line, text, SPACE);
 				mail_ptr -> from = text;
 				break;
 			}
-			case LINE(date):{
+			case LINE(DATE):{
 				getline(tokenized_line, text, SPACE);
 				mail_ptr -> date = text + mail_ptr -> date;
 				getline(tokenized_line, text, SPACE);
@@ -72,7 +75,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				mail_ptr -> date = mail_ptr -> date + text;
 				break;
 			}
-			case LINE(message_id):{
+			case LINE(MESSAGE_ID):{
 				getline(tokenized_line, text, SPACE);
 				if((*info_ptr)[stoi(text)] != NULL){
 					cout << "-" << endl;
@@ -83,7 +86,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				mail_ptr -> message_id = stoi(text);
 				break;
 			}
-			case LINE(subject):{
+			case LINE(SUBJECT):{
 				getline(tokenized_line, text);
 				replaceWithSpace(text);
 				stringstream tokenized_text(text);
@@ -93,18 +96,18 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				}
 				break;
 			}
-			case LINE(to):{
+			case LINE(TO):{
 				getline(tokenized_line, text, SPACE);
 				mail_ptr -> to = text;
 				break;
 			}
-			case LINE(content):{
+			case LINE(CONTENT):{
 				while(getline(fp, line)){
 					replaceWithSpace(line);
 					stringstream tokenized_line(line);
 					while(getline(tokenized_line, text, SPACE)){
 						if(text == "") continue;
-						mail_ptr -> content.push_back(text);
+						mail_ptr -> content[text] = true;
 						mail_ptr -> length += text.length();
 					}
 				}
@@ -209,59 +212,37 @@ vector <string> infix2posfix(vector <string> tokenized_expression){
 	return postfix;
 }
 
-string convert2OR(vector <string> postfix){
-	stack <string> S;
-	for(int i = 0; i < postfix.size(); i++){
-		if(isWord(postfix[i])) S.push(postfix[i]);
-		else{
-			if(postfix[i] == "!"){
-				string word = S.top();
-				S.pop();
-				S.push("!" + word);
-			}
-			else if(postfix[i] == "&"){
-				string word2 = S.top();
-				S.pop();
-				string word1 = S.top();
-				S.pop();
-				S.push("!(!" + word1 + "|!" + word2 + ")");
-			}
-			else if(postfix[i] == "|"){
-				string word2 = S.top();
-				S.pop();
-				string word1 = S.top();
-				S.pop();
-				S.push(word1 + "|" + word2);
-			}
-		}
-	}
-	return S.top();
+bool notOperator(string text){
+	return text != "&" and text != "|" and text != "!";
 }
 
-string convert2AND(vector <string> postfix){
-	stack <string> S;
+set <int> Database::getAllID(string from, string to, string start_date, string end_date){
+	set <int> candidates;
+	map <int, Mail*>::iterator iter;
+	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
+		bool legal = true;
+		if(from != "" and iter -> second -> from != from) break;
+		else if(to != "" and iter -> second -> to != to) break;
+		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) break;
+		else candidates.insert(iter -> first);
+	}
+	return candidates;
+}
+
+bool getElement(stack <bool> S){
+	bool element = S.top();
+	S.pop();
+	return element;
+}
+
+bool Database::calculator(int id, vector <string> postfix){
+	stack <bool> S;
 	for(int i = 0; i < postfix.size(); i++){
-		if(isWord(postfix[i])) S.push(postfix[i]);
+		if(notOperator(postfix[i])) S.push((*info_ptr)[id] -> content[postfix[i]]);
 		else{
-			if(postfix[i] == "!"){
-				string word = S.top();
-				S.pop();
-				S.push("!" + word);
-			}
-			else if(postfix[i] == "|"){
-				string word2 = S.top();
-				S.pop();
-				string word1 = S.top();
-				S.pop();
-				S.push("!(!" + word1 + "&!" + word2 + ")");
-			}
-			else if(postfix[i] == "&"){
-				string word2 = S.top();
-				S.pop();
-				string word1 = S.top();
-				S.pop();
-				S.push(word1 + "&" + word2);
-			}
+			if(postfix[i] == "!") S.push(!getElement(S));
+			else if(postfix[i] == "&") S.push(getElement(S) & getElement(S));
+			else S.push(getElement(S) | getElement(S));
 		}
 	}
 	return S.top();
@@ -272,7 +253,7 @@ void Database::query_operation(){
 	getline(cin, line);
 	stringstream tokenized_line(line);
 	getline(tokenized_line, text, SPACE);
-	string from = "", to = "", start_date = "", end_date = "", expression = "";
+	string from = "", to = "", start_date = "", end_date = "99999999", expression = "";
 	while(getline(tokenized_line, text, SPACE)){
 		if(text[0] == '-'){
 			if(text[1] == 'f') from = text.substr(3, text.length() - 4);
@@ -289,23 +270,18 @@ void Database::query_operation(){
 		}
 		else expression = text;
 	}
-	// toolkit here
 	vector <string> tokenized_expression = tokenize(expression);
 	vector <string> postfix = infix2posfix(tokenized_expression);
-	string allAND = convert2AND(postfix);
-	string allOR = convert2OR(postfix);
-	// need to simplify boolean expression or do something
-}
-
-void Database::print_mail(int id){
-	cout << "From: " << (*info_ptr)[id] -> from << endl;
-	cout << "Date: " << (*info_ptr)[id] -> date << endl;
-	cout << "Message-ID: " << (*info_ptr)[id] -> message_id << endl;
-	cout << "Subject: ";
-	for(int i = 0; i < (*info_ptr)[id] -> subject.size(); i++) cout << (*info_ptr)[id] -> subject[i] << ((i == (*info_ptr)[id] -> subject.size() - 1) ? "\n" : " ");
-	cout << "To: " << (*info_ptr)[id] -> to << endl;
-	cout << "Content:\n";
-	for(int i = 0; i < (*info_ptr)[id] -> content.size(); i++) cout << (*info_ptr)[id] -> content[i] << ((i == (*info_ptr)[id] -> content.size() - 1) ? "\n" : " ");
-	cout << (*info_ptr)[id] -> length << endl;
-	cout << endl;
+	set <int> candidates = getAllID(from, to, start_date, end_date);
+	int count = 0;
+	if(candidates.size() > 0){
+		for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
+			if(calculator(*iter, postfix)){
+				cout << *iter << " ";
+				count += 1;
+			}
+		}
+	}
+	if(count == 0) cout << "-";
+	cout << "\n";
 }

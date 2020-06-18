@@ -1,4 +1,5 @@
 #include <vector>
+#include <unordered_map>
 using namespace std;
 
 class Mail {
@@ -8,7 +9,7 @@ class Mail {
 		int message_id;
 		vector <string> subject;
 		string to;
-		vector <string> content;
+		unordered_map <string, bool> content;
 		int length;
 		Mail();
 };

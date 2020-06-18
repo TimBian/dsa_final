@@ -29,7 +29,4 @@ int main(){
 		else if(operation == "longest") database.longest_operation();
 		else if(operation == "query") database.query_operation();
 	}
-#ifdef DEBUG
-	database.print_mail(1);
-#endif
 }
