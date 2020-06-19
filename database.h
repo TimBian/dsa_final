@@ -93,7 +93,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				stringstream tokenized_text(text);
 				while(getline(tokenized_text, text, SPACE)){
 					if(text == "") continue;
-					mail_ptr -> subject.push_back(text);
+					mail_ptr -> content[text] = true;
 				}
 				break;
 			}
@@ -231,7 +231,7 @@ set <int> Database::getAllID(string from, string to, string start_date, string e
 	return candidates;
 }
 
-bool getElement(stack <bool> S){
+bool getElement(stack <bool>& S){
 	bool element = S.top();
 	S.pop();
 	return element;
@@ -282,7 +282,7 @@ void Database::query_operation(){
 	int count = 0;
 	if(candidates.size() > 0){
 		for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
-			if(calculator(*iter, postfix)){
+			if(expression == "" or calculator(*iter, postfix)){
 				cout << *iter << " ";
 				count += 1;
 			}

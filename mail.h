@@ -7,7 +7,6 @@ class Mail {
 		string from;
 		string date;
 		int message_id;
-		vector <string> subject;
 		string to;
 		unordered_map <string, bool> content;
 		int length;
