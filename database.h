@@ -104,7 +104,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 			}
 			case LINE(TO):{
 				getline(tokenized_line, text, SPACE);
-				mail_ptr -> to = text;
+				mail_ptr -> to = to_upper(text);
 				break;
 			}
 			case LINE(CONTENT):{
