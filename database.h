@@ -67,6 +67,8 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 			}
 			case LINE(DATE):{
 				getline(tokenized_line, text, SPACE);
+				int num = stoi(text);
+				if(num < 10) text = "0" + text;
 				mail_ptr -> date = text + mail_ptr -> date;
 				getline(tokenized_line, text, SPACE);
 				mail_ptr -> date = monthTable[text] + mail_ptr -> date;
@@ -131,7 +133,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 void Database::remove_operation(){
 	int id;
 	cin >> id;
-	if((*info_ptr)[id] == NULL){
+	if(info_ptr -> find(id) == info_ptr -> end()){
 		cout << "-" << endl;
 		return;
 	}
@@ -282,7 +284,8 @@ void Database::query_operation(){
 	if(candidates.size() > 0){
 		for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
 			if(calculator(*iter, postfix)){
-				cout << *iter << " ";
+				if(count > 0) cout << " ";
+				cout << *iter;
 				count += 1;
 			}
 		}
