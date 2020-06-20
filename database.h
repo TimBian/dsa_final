@@ -228,9 +228,9 @@ set <int> Database::getAllID(string from, string to, string start_date, string e
 	set <int> candidates;
 	map <int, Mail*>::iterator iter;
 	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
-		if(from != "" and iter -> second -> from != to_upper(from)) break;
-		else if(to != "" and iter -> second -> to != to_upper(to)) break;
-		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) break;
+		if(from != "" and iter -> second -> from != to_upper(from)) continue;
+		else if(to != "" and iter -> second -> to != to_upper(to)) continue;
+		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) continue;
 		else candidates.insert(iter -> first);
 	}
 	return candidates;
