@@ -93,6 +93,8 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				stringstream tokenized_text(text);
 				while(getline(tokenized_text, text, SPACE)){
 					if(text == "") continue;
+					string str = text;
+					transform(str.begin(), str.end(),str.begin(), ::toupper);
 					mail_ptr -> content[text] = true;
 				}
 				break;
@@ -175,14 +177,14 @@ vector <string> tokenize(string expression){
 		}
 		else{
 			if(lastIsWord){
-				tokenized_expression.push_back(last);
+				tokenized_expression.push_back(empty + last);
 				last = "";
 			}
 			tokenized_expression.push_back(empty + expression[i]);
 			lastIsWord = false;
 		}
 	}
-	if(lastIsWord) tokenized_expression.push_back(last);
+	if(lastIsWord) tokenized_expression.push_back(empty + last);
 	return tokenized_expression;
 }
 
