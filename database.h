@@ -62,7 +62,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 		switch(line_count){
 			case LINE(FROM):{
 				getline(tokenized_line, text, SPACE);
-				mail_ptr -> from = text;
+				mail_ptr -> from = to_upper(text);
 				break;
 			}
 			case LINE(DATE):{
@@ -98,8 +98,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				stringstream tokenized_text(text);
 				while(getline(tokenized_text, text, SPACE)){
 					if(text == "") continue;
-					string str = text;
-					mail_ptr -> content[text] = true;
+					mail_ptr -> content[to_upper(text)] = true;
 				}
 				break;
 			}
@@ -114,8 +113,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 					stringstream tokenized_line(line);
 					while(getline(tokenized_line, text, SPACE)){
 						if(text == "") continue;
-						string str = to_upper(text);
-						mail_ptr -> content[str] = true;
+						mail_ptr -> content[to_upper(text)] = true;
 						mail_ptr -> length += text.length();
 					}
 				}
@@ -228,8 +226,8 @@ set <int> Database::getAllID(string from, string to, string start_date, string e
 	set <int> candidates;
 	map <int, Mail*>::iterator iter;
 	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
-		if(from != "" and iter -> second -> from != to_upper(from)) continue;
-		else if(to != "" and iter -> second -> to != to_upper(to)) continue;
+		if(from != "" and iter -> second -> from != from) continue;
+		else if(to != "" and iter -> second -> to != to) continue;
 		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) continue;
 		else candidates.insert(iter -> first);
 	}
@@ -245,10 +243,7 @@ bool getElement(stack <bool>& S){
 bool Database::calculator(int id, vector <string> postfix){
 	stack <bool> S;
 	for(int i = 0; i < postfix.size(); i++){
-		if(notOperator(postfix[i])){
-			string str = to_upper(postfix[i]);
-			S.push((*info_ptr)[id] -> content[str]);
-		}
+		if(notOperator(postfix[i])) S.push((*info_ptr)[id] -> content[to_upper(postfix[i])]);
 		else{
 			if(postfix[i] == "!") S.push(!getElement(S));
 			else if(postfix[i] == "&") S.push(getElement(S) & getElement(S));
@@ -266,8 +261,8 @@ void Database::query_operation(){
 	string from = "", to = "", start_date = "", end_date = "999999999999", expression = "";
 	while(getline(tokenized_line, text, SPACE)){
 		if(text[0] == '-'){
-			if(text[1] == 'f') from = text.substr(3, text.length() - 4);
-			else if(text[1] == 't') to = text.substr(3, text.length() - 4);
+			if(text[1] == 'f') from = to_upper(text.substr(3, text.length() - 4));
+			else if(text[1] == 't') to = to_upper(text.substr(3, text.length() - 4));
 			else if(text[1] == 'd'){
 				string date;
 				text = text.substr(2, text.length() - 2);
