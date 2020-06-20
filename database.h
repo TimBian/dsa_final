@@ -44,6 +44,11 @@ void replaceWithSpace(string &text){
 	for(int i = 0; i < text.length(); i++) if(not isalnum(text[i])) text[i] = ' ';
 }
 
+string to_upper(string str){
+	transform(str.begin(), str.end(),str.begin(), ::toupper);
+	return str;
+}
+
 void Database::add_operation(unordered_map <string, string> monthTable){
 	string filePath, line, title;
 	cin >> filePath;
@@ -94,7 +99,6 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 				while(getline(tokenized_text, text, SPACE)){
 					if(text == "") continue;
 					string str = text;
-					transform(str.begin(), str.end(),str.begin(), ::toupper);
 					mail_ptr -> content[text] = true;
 				}
 				break;
@@ -110,8 +114,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 					stringstream tokenized_line(line);
 					while(getline(tokenized_line, text, SPACE)){
 						if(text == "") continue;
-						string str = text;
-						transform(str.begin(), str.end(),str.begin(), ::toupper);
+						string str = to_upper(text);
 						mail_ptr -> content[str] = true;
 						mail_ptr -> length += text.length();
 					}
@@ -225,8 +228,8 @@ set <int> Database::getAllID(string from, string to, string start_date, string e
 	set <int> candidates;
 	map <int, Mail*>::iterator iter;
 	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
-		if(from != "" and iter -> second -> from != from) break;
-		else if(to != "" and iter -> second -> to != to) break;
+		if(from != "" and iter -> second -> from != to_upper(from)) break;
+		else if(to != "" and iter -> second -> to != to_upper(to)) break;
 		else if(start_date > iter -> second -> date or iter -> second -> date > end_date) break;
 		else candidates.insert(iter -> first);
 	}
@@ -243,8 +246,7 @@ bool Database::calculator(int id, vector <string> postfix){
 	stack <bool> S;
 	for(int i = 0; i < postfix.size(); i++){
 		if(notOperator(postfix[i])){
-			string str = postfix[i];
-			transform(str.begin(), str.end(),str.begin(), ::toupper);
+			string str = to_upper(postfix[i]);
 			S.push((*info_ptr)[id] -> content[str]);
 		}
 		else{
@@ -284,7 +286,7 @@ void Database::query_operation(){
 	int count = 0;
 	if(candidates.size() > 0){
 		for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
-			if(expression == "" or calculator(*iter, postfix)){
+			if(calculator(*iter, postfix)){
 				cout << *iter << " ";
 				count += 1;
 			}
