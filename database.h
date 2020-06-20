@@ -20,7 +20,7 @@ enum LINE {FROM, DATE, MESSAGE_ID, SUBJECT, TO, CONTENT};
 
 class Database {
 	private:
-		map <int, Mail*>* info_ptr;
+		unordered_map <int, Mail*>* info_ptr;
 		map <int, map <int, Mail*> >* sortByLengthID_ptr;
 		int size;
 	public:
@@ -35,7 +35,7 @@ class Database {
 };
 
 Database::Database(){
-	info_ptr = new map <int, Mail*>;
+	info_ptr = new unordered_map <int, Mail*>;
 	sortByLengthID_ptr = new map <int, map <int, Mail*> >;
 	size = 0;
 }
@@ -226,7 +226,7 @@ bool notOperator(string text){
 
 set <int> Database::getAllID(string from, string to, string start_date, string end_date){
 	set <int> candidates;
-	map <int, Mail*>::iterator iter;
+	unordered_map <int, Mail*>::iterator iter;
 	for(iter = info_ptr -> begin(); iter != info_ptr -> end(); iter++){
 		if(from != "" and iter -> second -> from != from) continue;
 		else if(to != "" and iter -> second -> to != to) continue;
