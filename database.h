@@ -100,10 +100,7 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 						str = "";
 					}
 				}
-				if(str != ""){
-					mail.content[to_upper(str)] = true;
-					mail.length += str.length();
-				}
+				if(str != "") mail.content[to_upper(str)] = true;
 				break;
 			}
 			case LINE(TO):{
