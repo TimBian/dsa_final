@@ -21,6 +21,9 @@ void setMonthTable(unordered_map <string, string> &monthTable){
 }
 
 int main(){
+	ios_base::sync_with_stdio(false); // magic
+	cin.tie(0); // magic
+	
 	unordered_map <string, string> monthTable;
 	setMonthTable(monthTable);
 	string operation;
