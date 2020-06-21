@@ -1,5 +1,7 @@
-#include <vector>
-#include <unordered_map>
+#ifndef MAIL_H
+#define MAIL_H
+
+#include <string>
 using namespace std;
 
 class Mail {
@@ -8,12 +10,12 @@ class Mail {
 		string date;
 		int message_id;
 		string to;
-		unordered_map <string, bool> content;
 		int length;
-		Mail();
+
+		Mail() {	
+			date = "";
+			length = 0;
+		}
 };
 
-Mail::Mail(){
-	date = "";
-	length = 0;
-}
+#endif
