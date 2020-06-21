@@ -96,11 +96,23 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 			}
 			case LINE(SUBJECT):{
 				getline(tokenized_line, text);
-				replaceWithSpace(text);
-				stringstream tokenized_text(text);
-				while(getline(tokenized_text, text, SPACE)){
-					if(text == "") continue;
-					mail_ptr -> content[to_upper(text)] = true;
+				// replaceWithSpace(text);
+				// stringstream tokenized_text(text);
+				// while(getline(tokenized_text, text, SPACE)){
+				// 	if(text == "") continue;
+				// 	mail_ptr -> content[to_upper(text)] = true;
+				// }
+				string str = "";
+				for(int i = 0; i < text.size(); i++){
+					if(isalnum(text[i])) str += text[i];
+					else{
+						if(str != "") mail_ptr -> content[to_upper(str)] = true;
+						str = "";
+					}
+				}
+				if(str != ""){
+					mail_ptr -> content[to_upper(str)] = true;
+					mail_ptr -> length += str.length();
 				}
 				break;
 			}
@@ -111,12 +123,28 @@ void Database::add_operation(unordered_map <string, string> monthTable){
 			}
 			case LINE(CONTENT):{
 				while(getline(fp, line)){
-					replaceWithSpace(line);
-					stringstream tokenized_line(line);
-					while(getline(tokenized_line, text, SPACE)){
-						if(text == "") continue;
-						mail_ptr -> content[to_upper(text)] = true;
-						mail_ptr -> length += text.length();
+					// replaceWithSpace(line);
+					// stringstream tokenized_line(line);
+					// while(getline(tokenized_line, text, SPACE)){
+					// 	if(text == "") continue;
+					// 	mail_ptr -> content[to_upper(text)] = true;
+					// 	mail_ptr -> length += text.length();
+					// }
+					string str = "";
+					for(int i = 0; i < line.size(); i++){
+						// cout << line << endl;
+						if(isalnum(line[i])) str += line[i];
+						else{
+							if(str != ""){
+								mail_ptr -> content[to_upper(str)] = true;
+								mail_ptr -> length += str.length();
+							}
+							str = "";
+						}
+					}
+					if(str != ""){
+						mail_ptr -> content[to_upper(str)] = true;
+						mail_ptr -> length += str.length();
 					}
 				}
 				break;
