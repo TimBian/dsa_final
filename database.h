@@ -159,7 +159,7 @@ void Database::longest_operation(){
 }
 
 bool isWord(const string& input){
-	return input != "(" and input != ")" and input != "|" and input != "&" and input != "!";
+	return !(input == "(" or input == ")" or input == "|" or input == "&" or input == "!");
 }
 
 int priority(const string& operator_){
@@ -222,15 +222,15 @@ vector <string> infix2posfix(vector <string> tokenized_expression){
 }
 
 bool notOperator(const string& text){
-	return text != "&" and text != "|" and text != "!";
+	return !(text == "&" or text == "|" or text == "!");
 }
 
 vector <int> Database::getAllID(const string& from, const string& to, const string& start_date, const string& end_date){
 	vector <int> candidates;
 	unordered_map <int, Mail>::iterator iter;
 	for(iter = info.begin(); iter != info.end(); iter++){
-		if(from != "" and iter -> second.from != from) continue;
-		else if(to != "" and iter -> second.to != to) continue;
+		if(!(from == "" or iter -> second.from == from)) continue;
+		else if(!(to == "" or iter -> second.to == to)) continue;
 		else if(start_date > iter -> second.date or iter -> second.date > end_date) continue;
 		else candidates.push_back(iter -> first);
 	}
