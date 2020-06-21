@@ -25,20 +25,15 @@ class Database {
 	public:
 		Database();
 		void add_operation(unordered_map <string, string> monthTable);
-		void print_mail(int id);
 		void remove_operation();
 		void longest_operation();
 		void query_operation();
-		vector <int> getAllID(string from, string to, string start_date, string end_date);
+		vector <int> getAllID(const string& from, const string& to, const string& start_date, const string& end_date);
 		bool calculator(int id, vector <string> postfix);
 };
 
 Database::Database(){
 	size = 0;
-}
-
-void replaceWithSpace(string &text){
-	for(int i = 0; i < text.length(); i++) if(not isalnum(text[i])) text[i] = ' ';
 }
 
 string to_upper(string str){
@@ -163,18 +158,18 @@ void Database::longest_operation(){
 	cout << id << " " << len << endl;
 }
 
-bool isWord(string input){
+bool isWord(const string& input){
 	return input != "(" and input != ")" and input != "|" and input != "&" and input != "!";
 }
 
-int priority(string operator_){
+int priority(const string& operator_){
 	if(operator_ == "!") return 3;
 	else if(operator_ == "&") return 2;
 	else if(operator_ == "|") return 1;
 	else return 0;
 }
 
-vector <string> tokenize(string expression){
+vector <string> tokenize(const string& expression){
 	vector <string> tokenized_expression;
 	bool lastIsWord = false;
 	string last = "", empty = "";
@@ -226,11 +221,11 @@ vector <string> infix2posfix(vector <string> tokenized_expression){
 	return postfix;
 }
 
-bool notOperator(string text){
+bool notOperator(const string& text){
 	return text != "&" and text != "|" and text != "!";
 }
 
-vector <int> Database::getAllID(string from, string to, string start_date, string end_date){
+vector <int> Database::getAllID(const string& from, const string& to, const string& start_date, const string& end_date){
 	vector <int> candidates;
 	unordered_map <int, Mail>::iterator iter;
 	for(iter = info.begin(); iter != info.end(); iter++){
