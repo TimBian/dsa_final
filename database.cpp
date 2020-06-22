@@ -1,3 +1,4 @@
+#include <cassert>
 #include "database.h"
 using namespace std;
 
@@ -198,6 +199,103 @@ bool notOperator(string text){
 	return text != "&" and text != "|" and text != "!";
 }
 
+vector <int> Database::getAllID(string from, string to, string start_date, string end_date) {
+	vector <int> candidates;
+	unordered_map <int, Mail>::iterator iter;
+	for(iter = mail_info.begin(); iter != mail_info.end(); iter++){
+		if(from != "" and iter -> second.from != from) continue;
+		else if(to != "" and iter -> second.to != to) continue;
+		else if(start_date > iter -> second.date or iter -> second.date > end_date) continue;
+		else candidates.push_back(iter -> first);
+	}
+	sort(candidates.begin(), candidates.end());
+	return candidates;
+}
+
+vector<int> getElement(stack <vector<int>>& S){	
+	vector<int> element = S.top();	
+	S.pop();	
+	return element;	
+}
+
+vector<int> Database::calculator(vector <string> postfix, vector<int> universal){
+	assert(is_sorted(universal.begin(), universal.end()));
+	stack <vector<int>> S;
+	for(int i = 0; i < postfix.size(); i++){
+		if(notOperator(postfix[i])) {
+			const string& keyword = to_upper(postfix[i]);
+			//cerr << keyword << endl;
+			vector<int> filted;
+			set<int>& s = word_mailset[keyword];
+			for(auto it = s.begin(); it != s.end(); ) {
+				if(mail_info.find(*it) != mail_info.end()) {
+				//cerr << *it << endl;
+					filted.push_back(*it);
+					++it;
+				}
+				else {
+					it = s.erase(it);
+				}
+			}
+			S.push(filted); // copy?
+			assert(is_sorted(s.begin(), s.end()));
+		}
+		else{
+			if(postfix[i] == "!") {
+				vector<int> operand = getElement(S);
+				vector<int> result;
+				set_difference(universal.begin(), universal.end(), operand.begin(), operand.end(), back_inserter(result)); // or use inserter() here?
+				/*
+				cerr << "! [";
+				for(auto id : operand) cerr << id << ", ";
+				cerr << "]" << endl;
+				*/
+				S.push(result);
+				assert(is_sorted(result.begin(), result.end()));
+			}
+			else if(postfix[i] == "&") {
+				vector<int> operand1 = getElement(S); // copy!
+				vector<int> operand2 = getElement(S); // copy!
+				vector<int> result;
+				set_intersection(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));
+				/*
+				cerr << "[";
+				for(auto id : operand1) cerr << id << ", ";
+				cerr << "] & [";
+				for(auto id : operand2) cerr << id << ", ";
+				cerr << "]" << endl;
+				*/
+				S.push(result);
+				assert(is_sorted(result.begin(), result.end()));
+			}
+			else { // postfix[i] == "|"
+				vector<int> operand1 = getElement(S); // copy!
+				vector<int> operand2 = getElement(S); // copy!
+				vector<int> result;
+				set_union(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));
+				/*
+				cerr << "[";
+				for(auto id : operand1) cerr << id << ", ";
+				cerr << "] & [";
+				for(auto id : operand2) cerr << id << ", ";
+				cerr << "]" << endl;
+				*/
+				S.push(result);
+				assert(is_sorted(result.begin(), result.end()));
+			}
+		}
+	}
+
+	vector<int> operand = getElement(S); // copy!
+	vector<int> result;
+	set_intersection(universal.begin(), universal.end(), operand.begin(), operand.end(), back_inserter(result));
+	
+	assert(is_sorted(result.begin(), result.end()));
+	assert(S.empty());
+	
+	return result; // Does returning vector cause copy?
+}
+
 void Database::query() {
 	string line, text;
 	getline(cin, line);
@@ -248,87 +346,3 @@ void Database::setMonthTable(){
 	monthTable["December"] = "12";
 }
 
-vector <int> Database::getAllID(string from, string to, string start_date, string end_date) {
-	vector <int> candidates;
-	unordered_map <int, Mail>::iterator iter;
-	for(iter = mail_info.begin(); iter != mail_info.end(); iter++){
-		if(from != "" and iter -> second.from != from) continue;
-		else if(to != "" and iter -> second.to != to) continue;
-		else if(start_date > iter -> second.date or iter -> second.date > end_date) continue;
-		else candidates.push_back(iter -> first);
-	}
-	sort(candidates.begin(), candidates.end());
-	return candidates;
-}
-
-vector<int> Database::calculator(vector <string> postfix, vector<int> universal){
-	stack <vector<int>> S;
-	for(int i = 0; i < postfix.size(); i++){
-		if(notOperator(postfix[i])) {
-			const string& keyword = to_upper(postfix[i]);
-			//cerr << keyword << endl;
-			vector<int> filted;
-			for(auto id : word_mailset[keyword]) {
-				if(mail_info.find(id) != mail_info.end()) {
-					//cerr << id << endl;
-					filted.push_back(id);
-				}
-			}
-			S.push(filted); // copy?
-		}
-		else{
-			if(postfix[i] == "!") {
-				const vector<int>& operand = S.top();
-				vector<int> result;
-				set_difference(universal.begin(), universal.end(), operand.begin(), operand.end(), back_inserter(result)); // why inserter here?
-				/*
-				cerr << "! [";
-				for(auto id : operand) cerr << id << ", ";
-				cerr << "]" << endl;
-				*/
-				S.pop();
-				S.push(result);
-			}
-			else if(postfix[i] == "&") {
-				vector<int> operand1 = S.top(); // copy!
-				S.pop();
-				vector<int> operand2 = S.top(); // copy!
-				S.pop();
-				
-				vector<int> result;
-				set_intersection(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));
-				/*
-				cerr << "[";
-				for(auto id : operand1) cerr << id << ", ";
-				cerr << "] & [";
-				for(auto id : operand2) cerr << id << ", ";
-				cerr << "]" << endl;
-				*/
-				S.push(result);
-			}
-			else { // postfix[i] == "|"
-				vector<int> operand1 = S.top(); // copy!
-				S.pop();
-				vector<int> operand2 = S.top(); // copy!
-				S.pop();
-				
-				vector<int> result;
-				set_union(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));
-				/*
-				cerr << "[";
-				for(auto id : operand1) cerr << id << ", ";
-				cerr << "] & [";
-				for(auto id : operand2) cerr << id << ", ";
-				cerr << "]" << endl;
-				*/
-				S.push(result);
-			}
-		}
-	}
-
-	const vector<int>& operand = S.top();
-	vector<int> result;
-	set_intersection(universal.begin(), universal.end(), operand.begin(), operand.end(), back_inserter(result));
-	S.pop();
-	return result; // Does returning vector cause copy?
-}

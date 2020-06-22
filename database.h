@@ -40,9 +40,9 @@ class Database {
 		void longest();
 		void query();
 
-        	void setMonthTable();
 		vector <int> getAllID(string from, string to, string start_date, string end_date);
 		vector<int> calculator(vector <string> postfix, vector<int> universal);
+        	void setMonthTable();
 };
 
 #endif
