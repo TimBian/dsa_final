@@ -4,6 +4,7 @@ using namespace std;
 
 Database::Database(){
 	size = 0;
+	setMonthTable();
 }
 
 string to_upper(string str){
