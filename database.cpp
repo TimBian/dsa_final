@@ -7,9 +7,8 @@ Database::Database(){
 	setMonthTable();
 }
 
-string to_upper(string str){
-	transform(str.begin(), str.end(),str.begin(), ::toupper); // why "::"?
-	return str;
+void to_upper(string& str){
+	transform(str.begin(), str.end(), str.begin(), ::toupper); // why "::"?
 }
 
 void Database::add() {
@@ -25,7 +24,8 @@ void Database::add() {
 		switch(line_count){
 			case LINE(FROM):{
 				getline(tokenized_line, text, SPACE);
-				mail.from = to_upper(text);
+				to_upper(text);
+				mail.from = text;
 				break;
 			}
 			case LINE(DATE):{
@@ -62,18 +62,23 @@ void Database::add() {
 				for(int i = 0; i < text.size(); i++){
 					if(isalnum(text[i])) str += text[i];
 					else{
-						if(str != "") word_mailset[to_upper(str)].insert(mail.message_id);
+						if(str != "") {
+							to_upper(str);
+							word_mailset[str].insert(mail.message_id);
+						}
 						str = "";
 					}
 				}
 				if(str != ""){
-					word_mailset[to_upper(str)].insert(mail.message_id);
+					to_upper(str);
+					word_mailset[str].insert(mail.message_id);
 				}
 				break;
 			}
 			case LINE(TO):{
 				getline(tokenized_line, text, SPACE);
-				mail.to = to_upper(text);
+				to_upper(text);
+				mail.to = text;
 				break;
 			}
 			case LINE(CONTENT):{
@@ -83,14 +88,16 @@ void Database::add() {
 						if(isalnum(line[i])) str += line[i];
 						else{
 							if(str != ""){
-								word_mailset[to_upper(str)].insert(mail.message_id);
+								to_upper(str);
+								word_mailset[str].insert(mail.message_id);
 								mail.length += str.length();
 							}
 							str = "";
 						}
 					}
 					if(str != ""){
-						word_mailset[to_upper(str)].insert(mail.message_id);
+						to_upper(str);
+						word_mailset[str].insert(mail.message_id);
 						mail.length += str.length();
 					}
 				}
@@ -133,18 +140,18 @@ void Database::longest() {
 	cout << id << " " << len << endl;
 }
 
-bool isWord(string input){
+bool isWord(const string& input){
 	return input != "(" and input != ")" and input != "|" and input != "&" and input != "!";
 }
 
-int priority(string operator_){
+int priority(const string& operator_){
 	if(operator_ == "!") return 3;
 	else if(operator_ == "&") return 2;
 	else if(operator_ == "|") return 1;
 	else return 0;
 }
 
-vector <string> tokenize(string expression){
+vector <string> tokenize(const string& expression){
 	vector <string> tokenized_expression;
 	bool lastIsWord = false;
 	string last = "", empty = "";
@@ -167,7 +174,7 @@ vector <string> tokenize(string expression){
 	return tokenized_expression;
 }
 
-vector <string> infix2posfix(vector <string> tokenized_expression){
+vector <string> infix2posfix(const vector <string>& tokenized_expression){
 	vector <string> postfix;
 	stack <string> S;
 	for(int i = 0; i < tokenized_expression.size(); i++){
@@ -196,11 +203,11 @@ vector <string> infix2posfix(vector <string> tokenized_expression){
 	return postfix;
 }
 
-bool notOperator(string text){
+bool notOperator(const string& text){
 	return text != "&" and text != "|" and text != "!";
 }
 
-vector <int> Database::getAllID(string from, string to, string start_date, string end_date) {
+vector <int> Database::getAllID(const string& from, const string& to, const string& start_date, const string& end_date) {
 	vector <int> candidates;
 	unordered_map <int, Mail>::iterator iter;
 	for(iter = mail_info.begin(); iter != mail_info.end(); iter++){
@@ -219,12 +226,13 @@ vector<int> getElement(stack <vector<int>>& S){
 	return element;	
 }
 
-vector<int> Database::calculator(vector <string> postfix, vector<int> universal){
-	assert(is_sorted(universal.begin(), universal.end()));
+vector<int> Database::calculator(const vector <string>& postfix, const vector<int>& universal){
+	//assert(is_sorted(universal.begin(), universal.end()));
 	stack <vector<int>> S;
 	for(int i = 0; i < postfix.size(); i++){
 		if(notOperator(postfix[i])) {
-			const string& keyword = to_upper(postfix[i]);
+			string keyword = postfix[i]; // copy
+			to_upper(keyword);
 			//cerr << keyword << endl;
 			vector<int> filted;
 			set<int>& s = word_mailset[keyword];
@@ -239,7 +247,7 @@ vector<int> Database::calculator(vector <string> postfix, vector<int> universal)
 				}
 			}
 			S.push(filted); // copy?
-			assert(is_sorted(s.begin(), s.end()));
+			//assert(is_sorted(s.begin(), s.end()));
 		}
 		else{
 			if(postfix[i] == "!") {
@@ -252,7 +260,7 @@ vector<int> Database::calculator(vector <string> postfix, vector<int> universal)
 				cerr << "]" << endl;
 				*/
 				S.push(result);
-				assert(is_sorted(result.begin(), result.end()));
+				//assert(is_sorted(result.begin(), result.end()));
 			}
 			else if(postfix[i] == "&") {
 				vector<int> operand1 = getElement(S); // copy!
@@ -267,7 +275,7 @@ vector<int> Database::calculator(vector <string> postfix, vector<int> universal)
 				cerr << "]" << endl;
 				*/
 				S.push(result);
-				assert(is_sorted(result.begin(), result.end()));
+				//assert(is_sorted(result.begin(), result.end()));
 			}
 			else { // postfix[i] == "|"
 				vector<int> operand1 = getElement(S); // copy!
@@ -282,7 +290,7 @@ vector<int> Database::calculator(vector <string> postfix, vector<int> universal)
 				cerr << "]" << endl;
 				*/
 				S.push(result);
-				assert(is_sorted(result.begin(), result.end()));
+				//assert(is_sorted(result.begin(), result.end()));
 			}
 		}
 	}
@@ -291,8 +299,8 @@ vector<int> Database::calculator(vector <string> postfix, vector<int> universal)
 	vector<int> result;
 	set_intersection(universal.begin(), universal.end(), operand.begin(), operand.end(), back_inserter(result));
 	
-	assert(is_sorted(result.begin(), result.end()));
-	assert(S.empty());
+	//assert(is_sorted(result.begin(), result.end()));
+	//assert(S.empty());
 	
 	return result; // Does returning vector cause copy?
 }
@@ -305,8 +313,14 @@ void Database::query() {
 	string from = "", to = "", start_date = "", end_date = "999999999999", expression = "";
 	while(getline(tokenized_line, text, SPACE)){
 		if(text[0] == '-'){
-			if(text[1] == 'f') from = to_upper(text.substr(3, text.length() - 4));
-			else if(text[1] == 't') to = to_upper(text.substr(3, text.length() - 4));
+			if(text[1] == 'f') {
+				from = text.substr(3, text.length() - 4);
+				to_upper(from);
+			}
+			else if(text[1] == 't') {
+				to = text.substr(3, text.length() - 4);
+				to_upper(to);
+			}
 			else if(text[1] == 'd'){
 				string date;
 				text = text.substr(2, text.length() - 2);

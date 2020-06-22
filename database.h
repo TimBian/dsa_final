@@ -40,8 +40,8 @@ class Database {
 		void longest();
 		void query();
 
-		vector <int> getAllID(string from, string to, string start_date, string end_date);
-		vector<int> calculator(vector <string> postfix, vector<int> universal);
+		vector <int> getAllID(const string& from, const string& to, const string& start_date, const string& end_date);
+		vector<int> calculator(const vector <string>& postfix, const vector<int>& universal);
         	void setMonthTable();
 };
 
