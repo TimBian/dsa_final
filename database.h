@@ -13,7 +13,6 @@
 #include <queue>
 #include <cctype>
 #include <unordered_map>
-#include "mail.h"
 using namespace std;
 
 #define MAIL_LINE 6

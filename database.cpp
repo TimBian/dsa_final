@@ -14,7 +14,6 @@ void Database::add() {
 	string filePath, line, title;
 	cin >> filePath;
 	ifstream fp(filePath);
-	Mail mail;
 	string from_temp, to_temp, date_temp = "";
 	int length_temp = 0, message_id_temp;
 	for(int line_count = 0; line_count < MAIL_LINE; line_count++){
