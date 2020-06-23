@@ -222,8 +222,8 @@ set <int> Database::getAllID(const string& from, const string& to, const string&
 	for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
 		if(start_date <= id_date[*iter] and id_date[*iter] <= end_date) date_cand.insert(*iter);
 	}
-	set_intersection(candidates.begin(), candidates.end(), date_cand.begin(), date_cand.end(), inserter(result, result.begin()));
-	return result;
+	// set_intersection(candidates.begin(), candidates.end(), date_cand.begin(), date_cand.end(), inserter(result, result.begin()));
+	return date_cand;
 }
 
 set<int> getElement(stack <set<int>>& S){	
@@ -239,7 +239,7 @@ set<int> Database::calculator(const vector <string>& postfix, const set <int> ca
 			string keyword = postfix[i]; // copy
 			to_upper(keyword);
 			set<int> filted;
-			set<int>& s = wordset[keyword];
+			set<int> s = wordset[keyword];
 			for(auto it = s.begin(); it != s.end(); it++) {
 				if(candidates.find(*it) != candidates.end()) {
 					filted.insert(*it);
