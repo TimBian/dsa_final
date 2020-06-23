@@ -225,59 +225,56 @@ set <int> Database::getAllID(const string& from, const string& to, const string&
 		}
 		else return result;
 	}
-	for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
-		if(start_date <= id_date[*iter] and id_date[*iter] <= end_date) date_cand.insert(*iter);
-	}
-	// set_intersection(candidates.begin(), candidates.end(), date_cand.begin(), date_cand.end(), inserter(result, result.begin()));
+	for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++) if(start_date <= id_date[*iter] and id_date[*iter] <= end_date) date_cand.insert(*iter);
 	return date_cand;
 }
 
-set<int> getElement(stack <set<int>>& S){	
-	set<int> element = S.top();	
-	S.pop();	
-	return element;	
-}
+// set<int> getElement(stack <set<int>>& S){	
+// 	set<int> element = S.top();
+// 	S.pop();	
+// 	return element;	
+// }
 
 set<int> Database::calculator(const vector <string>& postfix, const set <int> candidates){
-	stack <set<int>> S;
+	vector <set<int>> S;
 	for(int i = 0; i < postfix.size(); i++){
 		if(notOperator(postfix[i])) {
 			string keyword = postfix[i]; // copy
 			to_upper(keyword);
-			set<int> filted;
+			set <int> filted;
 			set<int> s = wordset[keyword];
-			for(auto it = s.begin(); it != s.end(); it++) {
-				if(candidates.find(*it) != candidates.end()) {
-					filted.insert(*it);
-				}
-			}
-			S.push(filted); // copy?
+			for(auto it = s.begin(); it != s.end(); it++) if(candidates.find(*it) != candidates.end()) filted.insert(*it);
+			S.push_back(filted); // copy?
 		}
 		else{
 			if(postfix[i] == "!") {
-				set<int> operand = getElement(S);
+				set<int> operand = S.back();
 				set<int> result;
 				set_difference(candidates.begin(), candidates.end(), operand.begin(), operand.end(), inserter(result, result.begin())); // or use inserter() here?
-				S.push(result);
+				S.pop_back();
+				S.push_back(result);
 			}
 			else if(postfix[i] == "&") {
-				set<int> operand1 = getElement(S); // copy!
-				set<int> operand2 = getElement(S); // copy!
+				set<int> operand1 = S.back(); // copy!
+				set<int> operand2 = S[S.size() - 2]; // copy!
 				set<int> result;
 				set_intersection(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), inserter(result, result.begin()));
-				S.push(result);
+				S.pop_back();
+				S.pop_back();
+				S.push_back(result);
 			}
 			else { // postfix[i] == "|"
-				set<int> operand1 = getElement(S); // copy!
-				set<int> operand2 = getElement(S); // copy!
+				set<int> operand1 = S.back(); // copy!
+				set<int> operand2 = S[S.size() - 2]; // copy!
 				set<int> result;
 				set_union(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), inserter(result, result.begin()));
-				S.push(result);
+				S.pop_back();
+				S.pop_back();
+				S.push_back(result);
 			}
 		}
 	}
-	set<int> operand = getElement(S); // copy!
-	return operand; // Does returning vector cause copy?
+	return S.back(); // Does returning vector cause copy?
 }
 
 void Database::query() {
@@ -314,7 +311,7 @@ void Database::query() {
 	set<int> result = calculator(postfix, candidates);
     
 	if(result.size() == 0) cout << "-" << endl;
-    	else {
+    else {
 		for(int n : result)
 			cout << n << " ";
 		cout << endl;

@@ -42,7 +42,9 @@ class Database {
 		void query();
 
 		set <int> getAllID(const string& from, const string& to, const string& start_date, const string& end_date);
+		// set<int> calculator(const vector <string>& postfix, const set <int> candidates);
 		set<int> calculator(const vector <string>& postfix, const set <int> candidates);
+        
         void setMonthTable();
 };
 
