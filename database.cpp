@@ -209,15 +209,21 @@ set <int> Database::getAllID(const string& from, const string& to, const string&
 	set <int> candidates = in;
 	set <int> date_cand;
 	set <int> result;
-	if(from_id.find(from) != from_id.end()){
-		set_intersection(candidates.begin(), candidates.end(), from_id[from].begin(), from_id[from].end(), inserter(result, result.begin()));
-		candidates = result;
-		result.clear();
+	if(from != ""){
+		if(from_id.find(from) != from_id.end()){
+			set_intersection(candidates.begin(), candidates.end(), from_id[from].begin(), from_id[from].end(), inserter(result, result.begin()));
+			candidates = result;
+			result.clear();
+		}
+		else return result;
 	}
-	if(to_id.find(to) != to_id.end()){
-		set_intersection(candidates.begin(), candidates.end(), to_id[to].begin(), to_id[to].end(), inserter(result, result.begin()));
-		candidates = result;
-		result.clear();
+	if(to != ""){
+		if(to_id.find(to) != to_id.end()){
+			set_intersection(candidates.begin(), candidates.end(), to_id[to].begin(), to_id[to].end(), inserter(result, result.begin()));
+			candidates = result;
+			result.clear();
+		}
+		else return result;
 	}
 	for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++){
 		if(start_date <= id_date[*iter] and id_date[*iter] <= end_date) date_cand.insert(*iter);
@@ -271,9 +277,7 @@ set<int> Database::calculator(const vector <string>& postfix, const set <int> ca
 		}
 	}
 	set<int> operand = getElement(S); // copy!
-	set<int> result;
-	set_intersection(candidates.begin(), candidates.end(), operand.begin(), operand.end(), inserter(result, result.begin()));	
-	return result; // Does returning vector cause copy?
+	return operand; // Does returning vector cause copy?
 }
 
 void Database::query() {
