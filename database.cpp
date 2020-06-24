@@ -16,6 +16,7 @@ void Database::add() {
 	ifstream fp(filePath);
 	string from_temp, to_temp, date_temp = "";
 	int length_temp = 0, message_id_temp;
+	Mail mail;
 	for(int line_count = 0; line_count < MAIL_LINE; line_count++){
 		string text;
 		getline(fp, line);
@@ -51,6 +52,7 @@ void Database::add() {
 				message_id_temp = stoi(text);
 				if(in.find(message_id_temp) != in.end()){
 					cout << "-" << endl;
+					record.push_back(make_pair('-', message_id_temp));
 					return;
 				}
 				break;
@@ -63,14 +65,14 @@ void Database::add() {
 					else{
 						if(str != "") {
 							to_upper(str);
-							wordset[str].insert(message_id_temp);
+							mail.has_word[str] = true;
 						}
 						str = "";
 					}
 				}
 				if(str != ""){
 					to_upper(str);
-					wordset[str].insert(message_id_temp);
+					mail.has_word[str] = true;
 				}
 				break;
 			}
@@ -88,7 +90,7 @@ void Database::add() {
 						else{
 							if(str != ""){
 								to_upper(str);
-								wordset[str].insert(message_id_temp);
+								mail.has_word[str] = true;
 								length_temp += str.length();
 							}
 							str = "";
@@ -96,7 +98,7 @@ void Database::add() {
 					}
 					if(str != ""){
 						to_upper(str);
-						wordset[str].insert(message_id_temp);
+						mail.has_word[str] = true;
 						length_temp += str.length();
 					}
 				}
@@ -104,13 +106,15 @@ void Database::add() {
 			}
 		}
 	}
-	id_date[message_id_temp] = date_temp;
+	mail.date = date_temp;
+	M[message_id_temp] = mail;
 	from_id[from_temp].insert(message_id_temp);
 	to_id[to_temp].insert(message_id_temp);
 	heap.push(make_pair(length_temp, -message_id_temp)); // take '-' on id for convenience
 	in.insert(message_id_temp);
 	cout << in.size() << endl;
 	fp.close();
+	record.push_back(make_pair('a', message_id_temp));
 }
 
 void Database::remove() {
@@ -118,15 +122,18 @@ void Database::remove() {
 	cin >> id;
 	if(in.find(id) == in.end()){
 		cout << "-" << endl;
+		record.push_back(make_pair('-', id));
 		return;
 	}
 	in.erase(id);
 	cout << in.size() << endl;
+	record.push_back(make_pair('r', id));
 }
 
 void Database::longest() {
 	if(in.size() == 0){
 		cout << "-" << endl;
+		record.push_back(make_pair('-', 0));
 		return;
 	}
 	while(in.find(-heap.top().second) == in.end()) { // note '-'
@@ -136,6 +143,7 @@ void Database::longest() {
 	int id = -heap.top().second; // note '-'
 	
 	cout << id << " " << len << endl;
+	record.push_back(make_pair('l', 0));
 }
 
 bool isWord(const string& input){
@@ -205,13 +213,13 @@ bool notOperator(const string& text){
 	return !(text == "&" or text == "|" or text == "!");
 }
 
-set <int> Database::getAllID(const string& from, const string& to, const string& start_date, const string& end_date) {
-	set <int> candidates = in;
-	set <int> date_cand;
-	set <int> result;
+vector <int> Database::getAllID(const string& from, const string& to, const string& start_date, const string& end_date) {
+	vector <int> candidates(in.begin(), in.end());
+	vector <int> date_cand;
+	vector <int> result;
 	if(from != ""){
 		if(from_id.find(from) != from_id.end()){
-			set_intersection(candidates.begin(), candidates.end(), from_id[from].begin(), from_id[from].end(), inserter(result, result.begin()));
+			set_intersection(candidates.begin(), candidates.end(), from_id[from].begin(), from_id[from].end(), back_inserter(result));
 			candidates = result;
 			result.clear();
 		}
@@ -219,13 +227,13 @@ set <int> Database::getAllID(const string& from, const string& to, const string&
 	}
 	if(to != ""){
 		if(to_id.find(to) != to_id.end()){
-			set_intersection(candidates.begin(), candidates.end(), to_id[to].begin(), to_id[to].end(), inserter(result, result.begin()));
+			set_intersection(candidates.begin(), candidates.end(), to_id[to].begin(), to_id[to].end(), back_inserter(result));
 			candidates = result;
 			result.clear();
 		}
 		else return result;
 	}
-	for(set <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++) if(start_date <= id_date[*iter] and id_date[*iter] <= end_date) date_cand.insert(*iter);
+	for(vector <int>::iterator iter = candidates.begin(); iter != candidates.end(); iter++) if(start_date <= M[*iter].date and M[*iter].date <= end_date) date_cand.push_back(*iter);
 	return date_cand;
 }
 
@@ -235,45 +243,88 @@ set <int> Database::getAllID(const string& from, const string& to, const string&
 // 	return element;	
 // }
 
-set<int> Database::calculator(const vector <string>& postfix, const set <int> candidates){
-	vector <set<int>> S;
+vector<int> Database::calculator(vector <string>& postfix, const vector <int>& candidates){
+	vector <vector<int>> S;
+
+	//cerr << " ----------------- " << endl; 
+	
 	for(int i = 0; i < postfix.size(); i++){
 		if(notOperator(postfix[i])) {
-			string keyword = postfix[i]; // copy
+			string& keyword = postfix[i]; // copy
 			to_upper(keyword);
-			set <int> filted;
-			set<int> s = wordset[keyword];
-			for(auto it = s.begin(); it != s.end(); it++) if(candidates.find(*it) != candidates.end()) filted.insert(*it);
+			
+			//cerr << keyword << endl;
+			if(W.find(keyword) == W.end()) {
+				if(W[keyword].cursor != 0) {
+					cerr << " cursor != 0 " << endl;
+				}
+			}
+			Word& word = W[keyword];
+			while(word.cursor < record.size()) {
+				const auto& oper = record[word.cursor];
+				if(oper.first == 'a') {
+					if(in.find(oper.second) != in.end() && M[oper.second].has_word[keyword]) {		
+						word.used_mails.insert(oper.second);
+					}
+				}
+				word.cursor++;
+			}
+
+			vector <int> filted;
+			set<int>& s = W[keyword].used_mails;
+			set_intersection(s.begin(), s.end(), candidates.begin(), candidates.end(), back_inserter(filted));
 			S.push_back(filted); // copy?
 		}
 		else{
 			if(postfix[i] == "!") {
-				set<int> operand = S.back();
-				set<int> result;
-				set_difference(candidates.begin(), candidates.end(), operand.begin(), operand.end(), inserter(result, result.begin())); // or use inserter() here?
+				vector<int>& operand = S.back();
+				vector<int> result;
+				set_difference(candidates.begin(), candidates.end(), operand.begin(), operand.end(), back_inserter(result)); // or use inserter() here?
+                                /*
+				cerr << "! [";
+                                for(auto id : operand) cerr << id << ", ";
+                                cerr << "]" << endl;
+                                */
 				S.pop_back();
 				S.push_back(result);
 			}
 			else if(postfix[i] == "&") {
-				set<int> operand1 = S.back(); // copy!
-				set<int> operand2 = S[S.size() - 2]; // copy!
-				set<int> result;
-				set_intersection(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), inserter(result, result.begin()));
+				vector<int>& operand1 = S.back(); // copy!
+				vector<int>& operand2 = S[S.size() - 2]; // copy!
+				vector<int> result;
+				set_intersection(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));        
+                                /*
+				cerr << "[";
+                                for(auto id : operand1) cerr << id << ", ";
+                                cerr << "] & [";
+                                for(auto id : operand2) cerr << id << ", ";
+                                cerr << "]" << endl;
+				*/
 				S.pop_back();
 				S.pop_back();
 				S.push_back(result);
 			}
 			else { // postfix[i] == "|"
-				set<int> operand1 = S.back(); // copy!
-				set<int> operand2 = S[S.size() - 2]; // copy!
-				set<int> result;
-				set_union(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), inserter(result, result.begin()));
+				vector<int>& operand1 = S.back(); // copy!
+				vector<int>& operand2 = S[S.size() - 2]; // copy!
+				vector<int> result;
+				set_union(operand1.begin(), operand1.end(), operand2.begin(), operand2.end(), back_inserter(result));        
+                                /*
+				cerr << "[";
+                                for(auto id : operand1) cerr << id << ", ";
+                                cerr << "] & [";
+                                for(auto id : operand2) cerr << id << ", ";
+                                cerr << "]" << endl;
+				*/
 				S.pop_back();
 				S.pop_back();
 				S.push_back(result);
 			}
 		}
 	}
+	
+	//cerr << " ----------------- " << endl; 
+	
 	return S.back(); // Does returning vector cause copy?
 }
 
@@ -307,15 +358,20 @@ void Database::query() {
 	}
 	vector <string> tokenized_expression = tokenize(expression);
 	vector <string> postfix = infix2posfix(tokenized_expression);
-	set <int> candidates = getAllID(from, to, start_date, end_date);
-	set<int> result = calculator(postfix, candidates);
+	vector <int> candidates = getAllID(from, to, start_date, end_date);
+	vector<int> result = calculator(postfix, candidates);
     
-	if(result.size() == 0) cout << "-" << endl;
-    else {
+	if(result.size() == 0) {
+		cout << "-" << endl;
+		record.push_back(make_pair('-', 0));
+	}
+    	else {
 		for(int n : result)
 			cout << n << " ";
 		cout << endl;
+		record.push_back(make_pair('q', 0));
 	}
+
 }
 
 void Database::setMonthTable(){

@@ -22,17 +22,28 @@ using namespace std;
 
 enum LINE {FROM, DATE, MESSAGE_ID, SUBJECT, TO, CONTENT};
 
+struct Mail {
+	unordered_map<string, bool> has_word;
+	string date;
+};
+
+struct Word {
+	set<int> used_mails;
+	int cursor;
+};
+
 class Database {
 	private:
-			unordered_map <int, string> id_date;
-        	unordered_map <string, set<int>> wordset;
+		unordered_map <int, Mail> M;
+        	unordered_map <string, Word> W;
         	unordered_map <string, set<int>> from_id;
         	unordered_map <string, set<int>> to_id;
+		
+		priority_queue <pair<int, int>> heap; // only for longest()
+		set <int> in;
 
-			priority_queue <pair<int, int>> heap; // only for longest()
-			set <int> in;
-
-        	unordered_map <string, string> monthTable;
+		vector<pair<char, int>> record; // record every operation that is processed
+		unordered_map <string, string> monthTable;
 	public:
 		Database();
         
@@ -41,11 +52,10 @@ class Database {
 		void longest();
 		void query();
 
-		set <int> getAllID(const string& from, const string& to, const string& start_date, const string& end_date);
-		// set<int> calculator(const vector <string>& postfix, const set <int> candidates);
-		set<int> calculator(const vector <string>& postfix, const set <int> candidates);
+		vector <int> getAllID(const string& from, const string& to, const string& start_date, const string& end_date);
+		vector<int> calculator(vector <string>& postfix, const vector <int>& candidates);
         
-        void setMonthTable();
+		void setMonthTable();
 };
 
 #endif
